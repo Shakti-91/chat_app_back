@@ -1,17 +1,26 @@
 import { WebSocket,WebSocketServer } from "ws";
 
 const wss=new WebSocketServer({port:8080});
-const allSocket:WebSocket[]=[];
-wss.on('connection',(socket)=>{
-    allSocket.push(socket);
-    console.log('llll');
-   socket.on('message',(data)=>{
-    console.log(data.toString());
-    allSocket.forEach((s)=>{
-        if(s!=socket){
-            s.send(data.toString());
-        }
-    })
-   })
+let allSocket:WebSocket[]=[];
+wss.on('connection', (socket) => {
+  allSocket.push(socket);
+  console.log('Client connected');
+
+  socket.on('message', (data) => {
+    const message = data.toString();
+    console.log(message);
+
+    allSocket.forEach((s) => {
+      if (s !== socket && s.readyState === s.OPEN) {
+        s.send(message);
+      }
+    });
+  });
+
+  socket.on('close', () => {
+    allSocket = allSocket.filter((s) => s !== socket);
+    console.log('Client disconnected');
+  });
+});
+
    
-})
